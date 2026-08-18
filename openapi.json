@@ -1,0 +1,374 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Payment Service API",
+    "description": "API RESTful de Processamento de Pagamentos construída com Spring Boot seguindo TDD.",
+    "contact": {
+      "name": "Elias Nogueira / Team",
+      "email": "contact@paymentservice.com"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Servidor Local de Desenvolvimento"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Payments",
+      "description": "Endpoints para gerenciamento e processamento de pagamentos"
+    },
+    {
+      "name": "Payers",
+      "description": "Endpoints para consulta de pagamentos por pagador"
+    }
+  ],
+  "paths": {
+    "/payments": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Listar todos os pagamentos",
+        "description": "Retorna a lista completa de pagamentos ordenados por data de criação.",
+        "operationId": "getAllPayments",
+        "responses": {
+          "200": {
+            "description": "Lista de pagamentos retornada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaymentResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Criar novo pagamento",
+        "description": "Cria um novo pagamento com status inicial PENDING respeitando o limite diário acumulado de R$ 2.000,00 por fonte de pagamento.",
+        "operationId": "createPayment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentRequestDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Pagamento criado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados de requisição inválidos (campos obrigatórios ausentes ou valores negativos)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Limite diário acumulado de R$ 2.000,00 excedido para a fonte de pagamento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payments/{id}": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Consultar pagamento por ID",
+        "description": "Retorna as informações detalhadas de um pagamento a partir do seu ID.",
+        "operationId": "getPaymentById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pagamento encontrado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponseDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pagamento não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Atualizar status do pagamento",
+        "description": "Atualiza o status de um pagamento existente. Transições a partir de PAID ou FRAUD de volta para PENDING são proibidas.",
+        "operationId": "updatePaymentStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentStatusUpdateDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Status do pagamento atualizado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponseDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pagamento não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Transição de status inválida ou proibida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payer/{id}": {
+      "get": {
+        "tags": [
+          "Payers"
+        ],
+        "summary": "Consultar pagamentos por ID do pagador",
+        "description": "Retorna todos os pagamentos realizados por um pagador específico, ordenados por data de criação.",
+        "operationId": "getPaymentsByPayerId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de pagamentos do pagador retornada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaymentResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PaymentRequestDTO": {
+        "type": "object",
+        "required": [
+          "transactionId",
+          "paymentSource",
+          "amount"
+        ],
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "example": "TX-998811"
+          },
+          "paymentSource": {
+            "type": "string",
+            "enum": [
+              "PIX",
+              "DEBIT_CARD",
+              "CREDIT_CARD"
+            ],
+            "example": "PIX"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "example": 250.50
+          },
+          "payerId": {
+            "type": "string",
+            "example": "PAYER-123"
+          }
+        }
+      },
+      "PaymentResponseDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "transactionId": {
+            "type": "string",
+            "example": "TX-998811"
+          },
+          "paymentSource": {
+            "type": "string",
+            "enum": [
+              "PIX",
+              "DEBIT_CARD",
+              "CREDIT_CARD"
+            ],
+            "example": "PIX"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "example": 250.50
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PAID",
+              "FRAUD"
+            ],
+            "example": "PENDING"
+          },
+          "payerId": {
+            "type": "string",
+            "example": "PAYER-123"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-16T15:00:00"
+          }
+        }
+      },
+      "PaymentStatusUpdateDTO": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PAID",
+              "FRAUD"
+            ],
+            "example": "PAID"
+          }
+        }
+      },
+      "ErrorResponseDTO": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-16T15:23:00"
+          },
+          "status": {
+            "type": "integer",
+            "example": 400
+          },
+          "error": {
+            "type": "string",
+            "example": "Bad Request"
+          },
+          "message": {
+            "type": "string",
+            "example": "Validation failed"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "example": {
+              "transactionId": "Transaction ID is required"
+            }
+          }
+        }
+      }
+    }
+  }
+}

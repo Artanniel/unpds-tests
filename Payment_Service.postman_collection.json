@@ -1,0 +1,138 @@
+{
+	"info": {
+		"_postman_id": "a918b456-1122-4321-9988-776655443322",
+		"name": "Payment Service API",
+		"description": "Collection do Postman contendo todos os endpoints da API RESTful de Processamento de Pagamentos do Payment Service (TDD).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Pagamentos",
+			"item": [
+				{
+					"name": "Criar Pagamento (PIX)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"transactionId\": \"TX-998811\",\n  \"paymentSource\": \"PIX\",\n  \"amount\": 250.50,\n  \"payerId\": \"PAYER-123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments"
+							]
+						},
+						"description": "Cria um novo pagamento com status PENDING respeitando o limite diário acumulado de R$ 2.000,00 por fonte de pagamento."
+					},
+					"response": []
+				},
+				{
+					"name": "Consultar Pagamento por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"1"
+							]
+						},
+						"description": "Consulta os detalhes de um pagamento específico pelo seu ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Todos os Pagamentos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments"
+							]
+						},
+						"description": "Retorna todos os pagamentos cadastrados no sistema ordenados por data de criação."
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Status do Pagamento (para PAID)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"PAID\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"1"
+							]
+						},
+						"description": "Atualiza o status de um pagamento. Transições proibidas (ex: PAID para PENDING) retornam HTTP 409 Conflict."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Pagadores",
+			"item": [
+				{
+					"name": "Consultar Pagamentos por Pagador",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payer/PAYER-123",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payer",
+								"PAYER-123"
+							]
+						},
+						"description": "Retorna a lista de pagamentos efetuados por um pagador específico."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
