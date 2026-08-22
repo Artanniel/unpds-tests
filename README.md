@@ -162,6 +162,33 @@ Comandos de execução:
 ./mvnw clean verify
 ```
 
+### 🔍 Execução do SonarQube com Docker Compose
+
+Para subir o **SonarQube Community** localmente na porta **9000**:
+
+```bash
+# Subir o SonarQube em segundo plano
+docker-compose -f docker-compose-sonarqube.yml up -d
+
+# Ou subir junto com toda a infraestrutura
+docker-compose up -d
+```
+
+Acesse o SonarQube em: [http://localhost:9000](http://localhost:9000) (Login padrão: `admin` / `admin`).
+
+Para disparar a análise do projeto e enviar os relatórios para o SonarQube (utilizando as variáveis configuradas em `.env`):
+
+```bash
+# 1. Configurar o token em .env (com base no .env.example)
+# SONAR_TOKEN=sqa_a071a811dc0afa3b3cc31f046f3400331a04b2e0
+
+# 2. Executar a análise com o script que carrega o .env automaticamente:
+./run_sonar.sh
+
+# Ou carregar o .env manualmente e rodar o Maven:
+source .env && ./mvnw sonar:sonar
+```
+
 ---
 
 ## 🇺🇸 English

@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Load environment variables from .env if present
+if [ -f .env ]; then
+  echo "Loading environment variables from .env..."
+  set -a
+  source .env
+  set +a
+fi
+
 NEW_PASSWORD="031210"
 CONTAINER_NAME="unipds-tests-oracle-1"
 IS_NECESSARY_CHANGE_PASS=true
