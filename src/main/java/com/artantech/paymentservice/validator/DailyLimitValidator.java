@@ -46,4 +46,20 @@ public class DailyLimitValidator {
             throw new DailyLimitExceededException(source, DAILY_LIMIT, currentTotal, newAmount);
         }
     }
+
+    /**
+     * Versão booleana de {@link #validateDailyLimit(PaymentSource, BigDecimal)}.
+     * Encapsula a validação existente (baseada em exceção) e traduz o resultado
+     * em um boolean: {@code true} quando o valor viola alguma regra do limite
+     * diário (valor inválido ou limite excedido — ex.: {@link PaymentLimitException}),
+     * {@code false} quando o pagamento é válido e respeita o limite.
+     */
+    public boolean isLimitExceeded(PaymentSource source, BigDecimal newAmount) {
+        try {
+            validateDailyLimit(source, newAmount);
+            return false;
+        } catch (PaymentLimitException e) {
+            return true;
+        }
+    }
 }

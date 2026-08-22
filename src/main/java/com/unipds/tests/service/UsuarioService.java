@@ -24,4 +24,13 @@ public class UsuarioService {
     public Usuario salvarUsuario(Usuario usuario) {
         return usuarioRepository.save(usuario);
     }
+
+    public boolean podeVotar(int idade) {
+        boolean retorno = false;
+
+        if (idade >= 18 || idade <= 70) {
+            return true;
+        }
+        return retorno;
+    }
 }
