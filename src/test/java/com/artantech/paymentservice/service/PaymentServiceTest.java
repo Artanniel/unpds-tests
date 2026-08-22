@@ -7,12 +7,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.artantech.paymentservice.data.PaymentDataFactory;
 import com.artantech.paymentservice.dto.PaymentRequestDTO;
 import com.artantech.paymentservice.dto.PaymentResponseDTO;
 import com.artantech.paymentservice.dto.PaymentStatusUpdateDTO;
 import com.artantech.paymentservice.exceptions.DailyLimitExceededException;
 import com.artantech.paymentservice.exceptions.PaymentNotFoundException;
 import com.artantech.paymentservice.model.Payment;
+import com.artantech.paymentservice.model.PaymentRequest;
 import com.artantech.paymentservice.model.PaymentSource;
 import com.artantech.paymentservice.model.PaymentStatus;
 import com.artantech.paymentservice.repository.PaymentRepository;
@@ -48,6 +50,8 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Should save a payment when limit is not exceeded")
     void shouldSavePaymentWhenLimitIsNotExceeded() {
+        PaymentRequest validRequest = PaymentDataFactory.validPaymentRequest();
+
         when(paymentRepository.save(any()))
                 .thenAnswer(invocationOnMock -> {
                     Payment p = invocationOnMock.getArgument(0);
@@ -55,13 +59,13 @@ class PaymentServiceTest {
                             p.getStatus(), p.getPayerId(), p.getCreatedAt() != null ? p.getCreatedAt() : LocalDateTime.now());
                 });
 
-        PaymentRequestDTO paymentRequest = new PaymentRequestDTO("TX-100", PaymentSource.PIX, new BigDecimal("100.50"), "PAYER-1");
+        PaymentRequestDTO paymentRequest = new PaymentRequestDTO(validRequest.getTransactionId(), validRequest.getPaymentSource(), validRequest.getAmount(), validRequest.getPayerId());
 
         PaymentResponseDTO createdPayment = paymentService.createPayment(paymentRequest);
 
         assertThat(createdPayment.id()).isNotNull();
         assertThat(createdPayment.payerId()).isEqualTo(paymentRequest.payerId());
-        assertThat(createdPayment.paymentSource()).isEqualTo(PaymentSource.PIX);
+        assertThat(createdPayment.paymentSource()).isEqualTo(validRequest.getPaymentSource());
         assertThat(createdPayment.amount()).isEqualByComparingTo(paymentRequest.amount());
         assertThat(createdPayment.status()).isEqualTo(PaymentStatus.PENDING);
 
@@ -71,12 +75,12 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Não deve criar pagamento se a validação de limite diário falhar")
     void shouldNotCreatePaymentWhenDailyLimitExceeded() {
-        PaymentRequestDTO requestDTO = new PaymentRequestDTO("TX-101", PaymentSource.PIX, new BigDecimal("2500.00"),
-                "PAYER-1");
+        PaymentRequest invalidRequest = PaymentDataFactory.invalidPaymentRequest();
+        PaymentRequestDTO requestDTO = new PaymentRequestDTO(invalidRequest.getTransactionId(), invalidRequest.getPaymentSource(), invalidRequest.getAmount(), invalidRequest.getPayerId());
 
-        doThrow(new DailyLimitExceededException(PaymentSource.PIX, new BigDecimal("2000.00"), BigDecimal.ZERO,
-                new BigDecimal("2500.00")))
-                .when(dailyLimitValidator).validateDailyLimit(PaymentSource.PIX, new BigDecimal("2500.00"));
+        doThrow(new DailyLimitExceededException(invalidRequest.getPaymentSource(), new BigDecimal("2000.00"), BigDecimal.ZERO,
+                invalidRequest.getAmount()))
+                .when(dailyLimitValidator).validateDailyLimit(invalidRequest.getPaymentSource(), invalidRequest.getAmount());
 
         assertThatThrownBy(() -> paymentService.createPayment(requestDTO))
                 .isInstanceOf(DailyLimitExceededException.class);

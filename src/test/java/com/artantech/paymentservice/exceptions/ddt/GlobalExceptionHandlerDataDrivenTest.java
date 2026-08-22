@@ -91,7 +91,7 @@ class GlobalExceptionHandlerDataDrivenTest {
 
     static Stream<Arguments> provideExceptionScenarios() {
         return Stream.of(
-            arguments(new HttpMessageNotReadableException("Malformed JSON"), HttpStatus.BAD_REQUEST, "Invalid request payload or malformed JSON"),
+            arguments(new HttpMessageNotReadableException("Malformed JSON", (org.springframework.http.HttpInputMessage) null), HttpStatus.BAD_REQUEST, "Invalid request payload or malformed JSON"),
             arguments(new InvalidStatusTransitionException("Cannot change status from PAID back to PENDING"), HttpStatus.CONFLICT, "Cannot change status from PAID back to PENDING")
         );
     }

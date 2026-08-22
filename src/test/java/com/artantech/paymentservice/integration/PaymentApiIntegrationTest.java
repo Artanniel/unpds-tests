@@ -1,9 +1,11 @@
 package com.artantech.paymentservice.integration;
 
+import com.artantech.paymentservice.data.PaymentDataFactory;
 import com.artantech.paymentservice.dto.PaymentRequestDTO;
 import com.artantech.paymentservice.dto.PaymentResponseDTO;
 import com.artantech.paymentservice.dto.PaymentStatusUpdateDTO;
 import com.artantech.paymentservice.model.Payment;
+import com.artantech.paymentservice.model.PaymentRequest;
 import com.artantech.paymentservice.model.PaymentSource;
 import com.artantech.paymentservice.model.PaymentStatus;
 import com.artantech.paymentservice.repository.PaymentRepository;
@@ -80,11 +82,7 @@ class PaymentApiIntegrationTest {
         @Test
         @DisplayName("E2E - Deve criar pagamento utilizando Object Mapping na requisicao e na resposta (ObjectMapper + AssertJ)")
         void createPaymentWithObjectMapping() throws Exception {
-                PaymentRequestDTO paymentRequest = new PaymentRequestDTO(
-                                "TX-MAPPER-01",
-                                PaymentSource.PIX,
-                                new BigDecimal("100.50"),
-                                "f5d19454-ccb0-4de0-be78-b25b8a442464");
+                PaymentRequest paymentRequest = PaymentDataFactory.validPaymentRequest();
 
                 String responseInJson = mockMvc.perform(
                                 post("/payments")
@@ -97,9 +95,9 @@ class PaymentApiIntegrationTest {
 
                 PaymentResponseDTO paymentResponse = objectMapper.readValue(responseInJson, PaymentResponseDTO.class);
 
-                assertThat(paymentResponse.payerId()).isEqualTo(paymentRequest.payerId());
-                assertThat(paymentResponse.paymentSource()).isEqualTo(paymentRequest.paymentSource());
-                assertThat(paymentResponse.amount()).isEqualByComparingTo(paymentRequest.amount());
+                assertThat(paymentResponse.payerId()).isEqualTo(paymentRequest.getPayerId());
+                assertThat(paymentResponse.paymentSource()).isEqualTo(paymentRequest.getPaymentSource());
+                assertThat(paymentResponse.amount()).isEqualByComparingTo(paymentRequest.getAmount());
                 assertThat(paymentResponse.status()).isEqualTo(PaymentStatus.PENDING);
         }
 
